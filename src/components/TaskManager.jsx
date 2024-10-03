@@ -2,7 +2,6 @@ import { useEffect, useState } from 'react';
 
 const TaskManager = () => {
     const apiUrl = import.meta.env.VITE_API_URL;
-    const [activeTab, setActiveTab] = useState('list');
     const [tasks, setTasks] = useState([]); // Estado para almacenar las tareas
     const [taskName, setTaskName] = useState('');
     const [taskState, setTaskState] = useState('');
@@ -11,6 +10,7 @@ const TaskManager = () => {
     const [isEditing, setIsEditing] = useState(false);
     const [currentTaskId, setCurrentTaskId] = useState(null);
     const [editTaskName, setEditTaskName] = useState('');
+    const [editTaskState, setEditTaskState] = useState(''); // Estado de la tarea en edición
 
     // Función para obtener la lista de estados
     const fetchStates = async () => {
@@ -39,7 +39,7 @@ const TaskManager = () => {
                 const state = states.find(s => s.id === task.stateId);
                 return {
                     ...task,
-                    stateName: state ? state.stateName : 'Fue eliminado'
+                    stateName: state ? state.stateName : 'Fue eliminado ⚠️'
                 };
             });
 
@@ -53,6 +53,7 @@ const TaskManager = () => {
     useEffect(() => {
         fetchStates();
     }, []);
+    
     useEffect(() => {
         fetchTasks();
     }, [states]);
@@ -79,6 +80,7 @@ const TaskManager = () => {
 
             // Actualiza la lista de tareas después de crear una nueva tarea
             await fetchTasks();
+            alert("¡tu tarea fue creada!")
             // Limpia los campos del formulario
             setTaskName('');
             setTaskState('');
@@ -109,14 +111,15 @@ const TaskManager = () => {
         setIsEditing(true);
         setCurrentTaskId(task.id);
         setEditTaskName(task.title);
-        setTaskState(task.stateId); // Setea el estado actual en edición
+        setEditTaskState(task.stateId); // Setea el estado actual en edición
     };
+    
     // Función para cancelar la edición de una tarea
     const handleCancelEdit = () => {
         setIsEditing(false);
         setCurrentTaskId(null);
         setEditTaskName('');
-        setTaskState('');
+        setEditTaskState(''); // Reinicia el estado del editor
     };
 
     // Función para manejar la actualización de una tarea
@@ -132,7 +135,7 @@ const TaskManager = () => {
                 body: JSON.stringify({
                     id: currentTaskId,
                     title: editTaskName,
-                    stateId: parseInt(taskState), // Usa el estado actualizado
+                    stateId: parseInt(editTaskState), // Usa el estado actualizado
                 }),
             });
 
@@ -146,7 +149,7 @@ const TaskManager = () => {
             setIsEditing(false);
             setCurrentTaskId(null);
             setEditTaskName('');
-            setTaskState('');
+            setEditTaskState('');
         } catch (error) {
             console.error('Error updating task:', error);
         }
@@ -154,106 +157,94 @@ const TaskManager = () => {
 
     return (
         <div>
-            {error && <p>{error.message || 'Ocurrió un error'}</p>}
-            <h1>Gestión de Tareas</h1>
             <div>
-                <button onClick={() => setActiveTab('list')} style={{ marginRight: '10px' }}>
-                    Lista de Tareas
-                </button>
-                <button onClick={() => setActiveTab('create')}>
-                    Crear Tarea
-                </button>
-            </div>
-
-            {activeTab === 'list' && (
-                <div>
-                    <h2>Lista de Tareas</h2>
-                    {tasks.length === 0 ? (
-                        <p>No tiene tareas creadas.</p>
-                    ) : (
-                        <table>
-                            <thead>
-                                <tr>
-                                    <th>Título de la Tarea</th>
-                                    <th>Estado</th>
-                                    <th>Acciones</th>
-                                </tr>
-                            </thead>
-                            <tbody>
-                                {tasks.map((task) => (
-                                    <tr key={task.id}>
-                                        <td>
-                                            {isEditing && currentTaskId === task.id ? (
-                                                <input
-                                                    type="text"
-                                                    value={editTaskName}
-                                                    onChange={(e) => setEditTaskName(e.target.value)}
-                                                />
-                                            ) : (
-                                                task.title
-                                            )}
-                                        </td>
-                                        <td>
-                                            {isEditing && currentTaskId === task.id ? (
-                                                <select value={taskState} onChange={(e) => setTaskState(e.target.value)}>
-                                                    {states.map((state) => (
-                                                        <option key={state.id} value={state.id}>
-                                                            {state.stateName}
-                                                        </option>
-                                                    ))}
-                                                </select>
-                                            ) : (
-                                                task.stateName
-                                            )}
-                                        </td>
-                                        <td className='task-container'>
-                                            {isEditing && currentTaskId === task.id ? (
-
-                                                <div>
-                                                    <button onClick={handleUpdate}>Actualizar ✔️</button>
-                                                    <button onClick={handleCancelEdit}>Cancelar ✖️</button>
-                                                </div>
-
-                                            ) : (
-                                                <button onClick={() => startEditing(task)}>Editar ✏️</button>
-                                            )}
-                                            <button onClick={() => handleDelete(task.id)}>Eliminar 🗑️</button>
-                                        </td>
-                                    </tr>
-                                ))}
-                            </tbody>
-                        </table>
-                    )}
-                </div>
-            )}
-
-            {activeTab === 'create' && (
-                <div>
-                    <h2>Crear Tarea</h2>
-                    <form onSubmit={handleSubmit}>
-                        <input
-                            type="text"
-                            placeholder="Nombre de la tarea"
-                            value={taskName}
-                            onChange={(e) => setTaskName(e.target.value)}
-                            required
-                        />
-                        <select value={taskState} onChange={(e) => setTaskState(e.target.value)} required>
-                            <option value="" disabled>
-                                Selecciona un estado
+                {error && <p>{error.message || 'Ocurrió un error'}</p>}
+                <h1>Gestion de Tareas</h1>
+                <h2>Crear nueva tarea</h2>
+                <form onSubmit={handleSubmit} className='container'>
+                    <input
+                        type="text"
+                        placeholder="Nombre de la tarea"
+                        value={taskName}
+                        onChange={(e) => setTaskName(e.target.value)}
+                        required
+                        className='shape-input'
+                    />
+                    <select value={taskState}
+                        onChange={(e) => setTaskState(e.target.value)}
+                        required
+                        className='shape-select'>
+                        <option value="" disabled>
+                            Selecciona un estado
+                        </option>
+                        {states.map((state) => (
+                            <option key={state.id} value={state.id}>
+                                {state.stateName}
                             </option>
-                            {states.map((state) => (
-                                <option key={state.id} value={state.id}>
-                                    {state.stateName}
-                                </option>
-                            ))}
-                        </select>
-                        <button type="submit">Crear Tarea</button>
-                    </form>
-                </div>
+                        ))}
+                    </select>
+                    <button type="submit">Crear ➕</button>
+                </form>
+            </div>
+            <h2>Lista de Tareas</h2>
+            {tasks.length === 0 ? (
+                <p>No tiene tareas creadas.</p>
+            ) : (
+                <table>
+                    <thead>
+                        <tr>
+                            <th>Título de la Tarea</th>
+                            <th>Estado</th>
+                            <th>Acciones</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        {tasks.map((task) => (
+                            <tr key={task.id}>
+                                <td>
+                                    {isEditing && currentTaskId === task.id ? (
+                                        <input
+                                            type="text"
+                                            value={editTaskName}
+                                            onChange={(e) => setEditTaskName(e.target.value)}
+                                        />
+                                    ) : (
+                                        task.title
+                                    )}
+                                </td>
+                                <td>
+                                    {isEditing && currentTaskId === task.id ? (
+                                        <select value={editTaskState} onChange={(e) => setEditTaskState(e.target.value)}>
+                                            {states.map((state) => (
+                                                <option key={state.id} value={state.id}>
+                                                    {state.stateName}
+                                                </option>
+                                            ))}
+                                        </select>
+                                    ) : (
+                                        task.stateName
+                                    )}
+                                </td>
+                                <td>
+                                    {isEditing && currentTaskId === task.id ? (
+                                        <div className='container'>
+                                            <button onClick={handleUpdate}>Actualizar ✔️</button>
+                                            <button onClick={handleCancelEdit}>Cancelar ✖️</button>
+                                        </div>
+                                    ) : (
+                                        <div className='container'>
+                                            <button onClick={() => startEditing(task)}>Editar ✏️</button>
+                                            <button onClick={() => handleDelete(task.id)}>Eliminar 🗑️</button>
+                                        </div>
+                                    )}
+                                </td>
+                            </tr>
+                        ))}
+                    </tbody>
+                </table>
             )}
         </div>
-    );
+    )
 };
 
 export default TaskManager;

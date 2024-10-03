@@ -45,6 +45,7 @@ const StateManager = () => {
 
             const newState = await response.json();
             setStates((prevStates) => [...prevStates, newState]); // Añade el nuevo estado a la lista
+            alert("¡Tu estado fue creado!")
             setNewStateName('');
         } catch (err) {
             setError(err.message);
@@ -74,7 +75,12 @@ const StateManager = () => {
         setCurrentStateId(state.id);
         setEditStateName(state.stateName);
     };
-
+     // Función para cancelar la edición de una estado
+     const handleCancelEdit = () => {
+        setIsEditing(false);
+        setCurrentStateId(null);
+        setEditStateName('');
+    };
     // Función para manejar la actualización de un estado
     const handleUpdate = async (e) => {
         e.preventDefault();
@@ -122,23 +128,25 @@ const StateManager = () => {
 
     return (
         <div>
+            <h1>Gestion de estados</h1>
             {error && <p>{error.message || 'Ocurrió un error'}</p>}
-            <h2>Gestión de Estados</h2>
-            <form onSubmit={handleSubmit}>
+            <h2>Crear estado nuevo</h2>
+            <form onSubmit={handleSubmit} className='container'>
                 <input
                     type="text"
                     placeholder="Nombre del nuevo estado"
                     value={newStateName}
                     required
                     onChange={(e) => setNewStateName(e.target.value)}
+                    className='shape-input'
                 />
-                <button type="submit">Crear Estado</button>
+                <button type="submit">Crear ➕</button>
             </form>
-            <h3>Estados Actuales:</h3>
+            <h2>Lista de Estados Actuales</h2>
             <table>
                 <thead>
                     <tr>
-                        <th>Nombre de la Tarea</th>
+                        <th>Nombre de tus estados</th>
                         <th>Acciones</th>
                     </tr>
                 </thead>
@@ -146,7 +154,7 @@ const StateManager = () => {
                     {states.length === 0 ? (
                         <tr>
                             <td colSpan="2" style={{ textAlign: 'center' }}>
-                                No tienes tareas creadas
+                                No tienes estados creados
                             </td>
                         </tr>
                     ) : (
@@ -165,11 +173,18 @@ const StateManager = () => {
                                 </td>
                                 <td>
                                     {isEditing && currentStateId === state.id ? (
-                                        <button onClick={handleUpdate}>Actualizar ✔️</button>
+                                        <div className='container'>
+                                            <button onClick={handleUpdate}>Actualizar ✔️</button>
+                                            <button onClick={handleCancelEdit}>Cancelar ✖️</button>
+                                        </div>                                        
                                     ) : (
-                                        <button onClick={() => startEditing(state)}>Editar ✏️</button>
+                                        <div className='container'>
+                                            <button onClick={() => startEditing(state)}>Editar ✏️</button>
+                                            <button onClick={() => handleDelete(state.id)}>Eliminar 🗑️</button>
+                                        </div>
+                                        
                                     )}
-                                    <button onClick={() => handleDelete(state.id)}>Eliminar ✖️</button>
+                                    
                                 </td>
                             </tr>
                         ))
