@@ -159,7 +159,7 @@ const TaskManager = () => {
         <div>
             <div>
                 {error && <p>{error.message || 'Ocurrió un error'}</p>}
-                <h1>Gestion de Tareas</h1>
+                <h1>Gestión de Tareas</h1>
                 <h2>Crear nueva tarea</h2>
                 <form onSubmit={handleSubmit} className='container'>
                     <input
@@ -188,7 +188,7 @@ const TaskManager = () => {
             </div>
             <h2>Lista de Tareas</h2>
             {tasks.length === 0 ? (
-                <p>No tiene tareas creadas.</p>
+                <p>No tienes tareas creadas.</p>
             ) : (
                 <table>
                     <thead>

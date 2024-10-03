@@ -128,7 +128,7 @@ const StateManager = () => {
 
     return (
         <div>
-            <h1>Gestion de estados</h1>
+            <h1>Gestión de estados</h1>
             {error && <p>{error.message || 'Ocurrió un error'}</p>}
             <h2>Crear estado nuevo</h2>
             <form onSubmit={handleSubmit} className='container'>
