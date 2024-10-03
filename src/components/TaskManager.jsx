@@ -4,13 +4,17 @@ const TaskManager = () => {
     const apiUrl = import.meta.env.VITE_API_URL;
     const [activeTab, setActiveTab] = useState('list');
     const [tasks, setTasks] = useState([]); // Estado para almacenar las tareas
-    const [loading, setLoading] = useState(true); // Estado para controlar la carga
     const [taskName, setTaskName] = useState('');
     const [taskState, setTaskState] = useState('');
-    const [states, setStates] = useState([]); // Estado para almacenar los estados
+    const [states, setStates] = useState([]); // Estado para almacenar los estados generales
     const [error, setError] = useState(null); // Para manejar errores
 
-    // Función para obtener la lista de tareas
+    //Almacena el estado actualmente en edición
+    const [isEditing, setIsEditing] = useState(false);
+    const [currentTaskId, setCurrentTaskId] = useState(null);
+    const [editTaskName, setEditTaskName] = useState('');
+
+    //Función para obtener la lista de tareas
     const fetchTasks = async () => {
         try {
             const response = await fetch(apiUrl + '/api/task');
@@ -18,15 +22,13 @@ const TaskManager = () => {
             setTasks(data);
         } catch (error) {
             console.error('Error fetching tasks:', error);
-        } finally {
-            setLoading(false);
         }
     };
 
-    // Función para obtener la lista de estados
+    //Función para obtener la lista de estados
     const fetchStates = async () => {
         try {
-            const response = await fetch(`${apiUrl}/api/task/listStates`); 
+            const response = await fetch(`${apiUrl}/api/task/listStates`);
             if (!response.ok) {
                 throw new Error('Error al obtener los estados');
             }
@@ -43,9 +45,9 @@ const TaskManager = () => {
         fetchStates();
     }, []);
 
-    // Función para manejar el envío del formulario
+    //Función para manejar el envío del formulario de creación
     const handleSubmit = async (e) => {
-        e.preventDefault(); 
+        e.preventDefault();
 
         try {
             const response = await fetch(apiUrl + '/api/task', {
@@ -55,7 +57,7 @@ const TaskManager = () => {
                 },
                 body: JSON.stringify({
                     title: taskName,
-                    stateId: parseInt(taskState), // El ID del estado seleccionado
+                    stateId: parseInt(taskState), //ID del estado seleccionado
                 }),
             });
 
@@ -63,9 +65,9 @@ const TaskManager = () => {
                 throw new Error(`HTTP error! status: ${response.status}`);
             }
 
-            // Actualiza la lista de tareas después de crear una nueva tarea
+            //Actualiza la lista de tareas después de crear una nueva tarea
             await fetchTasks();
-            // Limpia los campos del formulario
+            //Limpia los campos del formulario
             setTaskName('');
             setTaskState('');
         } catch (error) {
@@ -73,8 +75,67 @@ const TaskManager = () => {
         }
     };
 
+    //Función para eliminar una tarea
+    const handleDelete = async (id) => {
+        try {
+            const response = await fetch(`${apiUrl}/api/task/${id}`, {
+                method: 'DELETE',
+            });
+
+            if (!response.ok) {
+                throw new Error('Error al eliminar la tarea');
+            }
+
+            setTasks((prevTasks) => prevTasks.filter((task) => task.id !== id));
+        } catch (error) {
+            console.error('Error deleting task:', error);
+        }
+    };
+
+    //Función para iniciar la edición de una tarea
+    const startEditing = (task) => {
+        setIsEditing(true);
+        setCurrentTaskId(task.id);
+        setEditTaskName(task.title);
+        setTaskState(task.stateId); //Setea el estado actual en edición
+    };
+
+    //Función para manejar la actualización de una tarea
+    const handleUpdate = async (e) => {
+        e.preventDefault();
+
+        try {
+            const response = await fetch(`${apiUrl}/api/task/${currentTaskId}`, {
+                method: 'PUT',
+                headers: {
+                    'Content-Type': 'application/json',
+                },
+                body: JSON.stringify({
+                    id: currentTaskId,
+                    title: editTaskName,
+                    stateId: parseInt(taskState),
+                }),
+            });
+
+            if (!response.ok) {
+                throw new Error('Error al actualizar la tarea');
+            }
+
+            //Actualiza la lista de tareas después de la actualización
+            await fetchTasks();
+            //Restablece el estado de edición
+            setIsEditing(false);
+            setCurrentTaskId(null);
+            setEditTaskName('');
+            setTaskState('');
+        } catch (error) {
+            console.error('Error updating task:', error);
+        }
+    };
+
     return (
         <div>
+            {error && <p>{error.message || 'Ocurrió un error'}</p>}
             <h1>Gestión de Tareas</h1>
             <div>
                 <button onClick={() => setActiveTab('list')} style={{ marginRight: '10px' }}>
@@ -88,18 +149,44 @@ const TaskManager = () => {
             {activeTab === 'list' && (
                 <div>
                     <h2>Lista de Tareas</h2>
-                    {loading ? (
-                        <p>Cargando tareas...</p>
-                    ) : tasks.length === 0 ? (
+                    {tasks.length === 0 ? (
                         <p>No tiene tareas creadas.</p>
                     ) : (
-                        <ul>
-                            {tasks.map((task) => (
-                                <li key={task.id}>
-                                    {task.title} - Estado: {task.stateId}
-                                </li>
-                            ))}
-                        </ul>
+                        <table>
+                            <thead>
+                                <tr>
+                                    <th>Título de la Tarea</th>
+                                    <th>Estado</th>
+                                    <th>Acciones</th>
+                                </tr>
+                            </thead>
+                            <tbody>
+                                {tasks.map((task) => (
+                                    <tr key={task.id}>
+                                        <td>
+                                            {isEditing && currentTaskId === task.id ? (
+                                                <input
+                                                    type="text"
+                                                    value={editTaskName}
+                                                    onChange={(e) => setEditTaskName(e.target.value)}
+                                                />
+                                            ) : (
+                                                task.title
+                                            )}
+                                        </td>
+                                        <td>{task.stateId}</td>
+                                        <td>
+                                            {isEditing && currentTaskId === task.id ? (
+                                                <button onClick={handleUpdate}>Actualizar ✔️</button>
+                                            ) : (
+                                                <button onClick={() => startEditing(task)}>Editar ✏️</button>
+                                            )}
+                                            <button onClick={() => handleDelete(task.id)}>Eliminar ✖️</button>
+                                        </td>
+                                    </tr>
+                                ))}
+                            </tbody>
+                        </table>
                     )}
                 </div>
             )}
@@ -119,7 +206,7 @@ const TaskManager = () => {
                             <option value="" disabled>
                                 Selecciona un estado
                             </option>
-                            {states.map(state => (
+                            {states.map((state) => (
                                 <option key={state.id} value={state.id}>
                                     {state.stateName}
                                 </option>
