@@ -32,6 +32,7 @@ Las funciones principales para la pantalla gestionar estados incluyen:
 La aplicación se ha desarrollado utilizando las siguientes tecnologías:
 
 - **React**: Framework para el desarrollo de aplicaciones web.
+- **Vite**: Herramienta de construcción rápida y eficiente que mejora el flujo de trabajo durante el desarrollo.
 - **JavaScript**: Lenguaje de programación utilizado para la lógica de la aplicación.
 - **Fetch API**: Para realizar peticiones HTTP a la API de gestión de tareas.
 - **CSS**: Para aplicar estilos y mejorar la presentación de la interfaz gráfica.
@@ -49,5 +50,11 @@ La aplicación se ha desarrollado utilizando las siguientes tecnologías:
 
 ![image](https://github.com/user-attachments/assets/c59ae315-f8b3-4056-8b48-24557cafb73d)
 
+## Instalación y Configuración
 
+1. Clonar el repositorio:  git clone https://github.com/YennyHernandez/TaskManagementApp.git
+2. Navegar al directorio cd task-manager
+3. Instalar dependencias npm install
+4. Iniciar el servidor npm run dev
+5. El frontend estará corriendo en http://localhost:5173/  ✔️
 
